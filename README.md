@@ -37,6 +37,7 @@ A mini AI-powered product discovery assistant that recommends the right products
 2. **sentence-transformers**: Local embeddings for privacy and no API costs
 3. **Gemini 2.0 Flash**: Fast, cost-effective LLM for conversational responses
 4. **KNN Search**: Simple but effective for small-medium product catalogs
+5. **Pre-computed Embeddings**: Embeddings are generated locally and shipped with the database, enabling deployment on memory-constrained platforms (e.g., Render free tier) without loading large ML models at runtime
 
 ## 🏗️ Architecture
 
@@ -185,8 +186,9 @@ Response:
 
 1. **Web Scraping**: Products are scraped from traya.health using BeautifulSoup and httpx
 2. **Embeddings**: Product descriptions are converted to 384-dim vectors using sentence-transformers (all-MiniLM-L6-v2)
-3. **Semantic Search**: User queries are embedded and matched against product embeddings using KNN
-4. **RAG Generation**: Top matching products provide context for Gemini to generate personalized recommendations
+3. **Pre-computed Storage**: Embeddings are stored in SQLite and shipped with the deployment for memory efficiency
+4. **Semantic Search**: User queries are matched against pre-computed embeddings using enhanced text similarity
+5. **RAG Generation**: Top matching products provide context for Gemini to generate personalized recommendations
 
 ## Tech Stack
 

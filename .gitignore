@@ -10,10 +10,11 @@ __pycache__/
 .env
 *.env.local
 
-# Database
-*.db
+# Database (except pre-populated seed data)
 *.sqlite
 *.sqlite3
+# Keep dev.db with pre-computed embeddings for deployment
+!backend/dev.db
 
 # Build
 dist/

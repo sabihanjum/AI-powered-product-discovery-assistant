@@ -3,7 +3,7 @@ services:
   - type: web
     name: product-discovery-api
     env: python
-    buildCommand: pip install -r backend/requirements.txt && cd backend && python init_db.py
+    buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GEMINI_API_KEY
@@ -12,5 +12,5 @@ services:
         value: gemini-2.0-flash
       - key: DATABASE_URL
         value: sqlite:///./dev.db
-      - key: USE_SIMPLE_SEARCH
+      - key: USE_PRECOMPUTED_EMBEDDINGS
         value: "true"
