@@ -7,7 +7,7 @@ A mini AI-powered product discovery assistant that recommends the right products
 ![React](https://img.shields.io/badge/React-18+-61DAFB)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688)
 
-## 🎯 Features
+## Features
 
 - **Smart Product Search**: Uses semantic embeddings to find relevant products
 - **AI Chat Assistant**: Natural language product recommendations powered by Google Gemini
@@ -16,7 +16,7 @@ A mini AI-powered product discovery assistant that recommends the right products
 - **Modern UI**: Clean React frontend with responsive design
 - **Search & Filter**: Client-side product filtering
 
-## 🧠 Design Decisions & Assumptions
+## Design Decisions & Assumptions
 
 ### Product Thinking
 
@@ -39,7 +39,7 @@ A mini AI-powered product discovery assistant that recommends the right products
 4. **KNN Search**: Simple but effective for small-medium product catalogs
 5. **Pre-computed Embeddings**: Embeddings are generated locally and shipped with the database, enabling deployment on memory-constrained platforms (e.g., Render free tier) without loading large ML models at runtime
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -149,7 +149,7 @@ AI-powered product discovery assistant/
 └── README.md
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -231,11 +231,11 @@ GEMINI_MODEL=gemini-2.0-flash
 DATABASE_URL=sqlite:///./dev.db
 ```
 
-## 🎥 Demo
+## Demo
 
 [Loom Video Demo](YOUR_LOOM_LINK_HERE)
 
-## ⚡ Edge Cases Handled
+## Edge Cases Handled
 
 | Scenario | Handling |
 |----------|----------|
@@ -247,7 +247,7 @@ DATABASE_URL=sqlite:///./dev.db
 | Missing product images | Placeholder image fallback |
 | CORS issues | Properly configured for frontend |
 
-## 🚀 Extra Features (Beyond Requirements)
+## Extra Features (Beyond Requirements)
 
 1. **Product Search Bar**: Filter products on the home page
 2. **Typed API Responses**: Pydantic models for request/response validation
@@ -256,7 +256,7 @@ DATABASE_URL=sqlite:///./dev.db
 5. **Nginx Config**: Ready for production deployment
 6. **Query Echo**: Returns user's query in response for context
 
-## 📊 Performance Notes
+## Performance Notes
 
 - **Embedding Model**: ~400MB download on first run, cached thereafter
 - **Response Time**: ~2-5 seconds (embedding + LLM call)
@@ -269,5 +269,6 @@ MIT License
 ---
 
 Built for Neusearch AI Technical Assignment
-#   T r i g g e r   r e b u i l d  
+#   T r i g g e r   r e b u i l d 
+ 
  
