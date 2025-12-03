@@ -1,21 +1,44 @@
 from typing import List, Dict, Any, Tuple
 import numpy as np
-from sentence_transformers import SentenceTransformer
+import os
 from .database import SessionLocal
 from . import models
 
 _EMBED_MODEL = None
+_USE_SIMPLE_SEARCH = os.getenv("USE_SIMPLE_SEARCH", "false").lower() == "true"
 
 
 def get_embedding_model(name: str = "all-MiniLM-L6-v2"):
+    """Load embedding model - with fallback for low-memory environments"""
     global _EMBED_MODEL
     if _EMBED_MODEL is None:
-        _EMBED_MODEL = SentenceTransformer(name)
+        if _USE_SIMPLE_SEARCH:
+            _EMBED_MODEL = "simple"
+        else:
+            try:
+                from sentence_transformers import SentenceTransformer
+                _EMBED_MODEL = SentenceTransformer(name)
+            except Exception as e:
+                print(f"Failed to load SentenceTransformer: {e}, using simple search")
+                _EMBED_MODEL = "simple"
     return _EMBED_MODEL
+
+
+def simple_text_similarity(query: str, text: str) -> float:
+    """Simple keyword-based similarity for low-memory fallback"""
+    query_words = set(query.lower().split())
+    text_words = set(text.lower().split())
+    if not query_words or not text_words:
+        return 0.0
+    intersection = query_words & text_words
+    return len(intersection) / max(len(query_words), 1)
 
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
     model = get_embedding_model()
+    if model == "simple":
+        # Return dummy embeddings for simple search mode
+        return [[0.0] * 384 for _ in texts]
     embs = model.encode(texts, show_progress_bar=False, convert_to_numpy=True)
     return [e.tolist() for e in embs]
 
@@ -65,11 +88,24 @@ def search_knn(query: str, top_k: int = 5) -> List[Tuple[int, float, str]]:
     db = SessionLocal()
     try:
         model = get_embedding_model()
-        q_emb = model.encode([query], convert_to_numpy=True)[0]
-
+        
         rows = db.query(models.ProductChunk).all()
         if not rows:
             return []
+        
+        # Simple search mode (keyword-based)
+        if model == "simple":
+            results = []
+            for r in rows:
+                score = simple_text_similarity(query, r.chunk_text or "")
+                if score > 0:
+                    results.append((r.product_id, score, r.chunk_text))
+            results.sort(key=lambda x: x[1], reverse=True)
+            return results[:top_k]
+        
+        # Semantic search mode (embeddings)
+        q_emb = model.encode([query], convert_to_numpy=True)[0]
+        
         embs = []
         metas = []
         texts = []
@@ -82,6 +118,9 @@ def search_knn(query: str, top_k: int = 5) -> List[Tuple[int, float, str]]:
             texts.append(r.chunk_text)
             prod_ids.append(r.product_id)
 
+        if not embs:
+            return []
+            
         embs = np.vstack(embs)
         q = q_emb.astype(np.float32)
         # cosine similarity
