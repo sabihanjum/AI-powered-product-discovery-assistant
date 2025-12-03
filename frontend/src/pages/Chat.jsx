@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { sendChatMessage } from '../api'
 import './Chat.css'
 
@@ -66,13 +67,13 @@ function Chat() {
                   <p className="products-label">Related Products:</p>
                   <div className="product-chips">
                     {msg.products.map((product, pidx) => (
-                      <a 
+                      <Link 
                         key={pidx} 
-                        href={`/product/${product.product_id}`}
+                        to={`/product/${product.product_id}`}
                         className="product-chip"
                       >
                         {product.title}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
