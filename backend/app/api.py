@@ -32,6 +32,26 @@ def on_startup():
     db.close()
 
 
+@router.get("/debug/db")
+def debug_db(db: Session = Depends(get_db)):
+    """Debug endpoint to check database status"""
+    import os
+    from pathlib import Path
+    from .database import BASE_DIR
+    
+    db_path = BASE_DIR / "dev.db"
+    return {
+        "cwd": os.getcwd(),
+        "base_dir": str(BASE_DIR),
+        "db_path": str(db_path),
+        "db_exists": os.path.exists(db_path),
+        "db_size": os.path.getsize(db_path) if os.path.exists(db_path) else 0,
+        "product_count": db.query(models.Product).count(),
+        "chunk_count": db.query(models.ProductChunk).count(),
+        "files_in_base_dir": os.listdir(BASE_DIR) if os.path.exists(BASE_DIR) else []
+    }
+
+
 @router.post("/scrape")
 def run_scraper(site: str = "furlenco", db: Session = Depends(get_db)):
     """Run scraper for a given site. Returns number of items inserted."""
