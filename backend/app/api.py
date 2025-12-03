@@ -17,8 +17,19 @@ router = APIRouter()
 
 @router.on_event("startup")
 def on_startup():
+    import os
+    print(f"Current working directory: {os.getcwd()}")
+    print(f"Files in cwd: {os.listdir('.')}")
+    print(f"dev.db exists: {os.path.exists('dev.db')}")
+    if os.path.exists('dev.db'):
+        print(f"dev.db size: {os.path.getsize('dev.db')} bytes")
     # create tables if they do not exist (for quick start)
     Base.metadata.create_all(bind=engine)
+    # Check how many products are in database
+    db = SessionLocal()
+    count = db.query(models.Product).count()
+    print(f"Products in database: {count}")
+    db.close()
 
 
 @router.post("/scrape")
