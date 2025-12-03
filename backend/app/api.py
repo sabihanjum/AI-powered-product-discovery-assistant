@@ -137,16 +137,52 @@ def chat(req: ChatRequest):
     
     Edge cases handled:
     - Empty/short queries
+    - Out-of-scope queries (not health/wellness related)
     - No matching products
     - LLM failures (graceful fallback)
     """
     # Edge case: validate input
-    query = req.message.strip()
+    query = req.message.strip().lower()
+    original_query = req.message.strip()
+    
     if len(query) < 2:
         return ChatResponse(
             message="Please provide a more detailed question about products you're looking for.",
             recommendations=[],
-            query=query
+            query=original_query
+        )
+    
+    # Edge case: detect out-of-scope queries
+    # Our store is health & wellness focused (hair, skin, digestion, sleep, etc.)
+    health_keywords = [
+        'hair', 'scalp', 'dandruff', 'baldness', 'fall', 'growth', 'thinning',
+        'skin', 'acne', 'glow', 'face', 'wrinkle', 'aging',
+        'sleep', 'stress', 'anxiety', 'calm', 'relax',
+        'digest', 'gut', 'stomach', 'bowel', 'constipation',
+        'health', 'wellness', 'vitamin', 'supplement', 'herbal', 'ayurvedic',
+        'cholesterol', 'weight', 'metabolism', 'energy', 'fatigue',
+        'oil', 'serum', 'shampoo', 'conditioner', 'treatment',
+        'natural', 'organic', 'herb', 'medicine'
+    ]
+    
+    out_of_scope_keywords = [
+        'furniture', 'apartment', 'rent', 'house', 'flat', 'bhk',
+        'clothes', 'wear', 'shirt', 'pants', 'dress', 'gym wear', 'meeting',
+        'electronics', 'phone', 'laptop', 'computer', 'tv',
+        'car', 'bike', 'vehicle', 'travel', 'flight', 'hotel',
+        'food', 'restaurant', 'pizza', 'burger', 'coffee',
+        'job', 'career', 'salary', 'interview'
+    ]
+    
+    # Check if query is clearly out of scope
+    is_out_of_scope = any(kw in query for kw in out_of_scope_keywords)
+    has_health_context = any(kw in query for kw in health_keywords)
+    
+    if is_out_of_scope and not has_health_context:
+        return ChatResponse(
+            message="I'm a health and wellness product assistant! I can help you find products for hair care, skin care, stress relief, digestive health, and more. Try asking something like 'What helps with hair fall?' or 'I need something for better sleep'.",
+            recommendations=[],
+            query=original_query
         )
     
     # Ensure embedding model is loaded
@@ -157,9 +193,9 @@ def chat(req: ChatRequest):
         raise HTTPException(status_code=503, detail="AI service temporarily unavailable")
     
     # Semantic search
-    results = search_knn(query, top_k=10)
+    results = search_knn(original_query, top_k=10)
     
-    # Edge case: no results found
+    # Edge case: no results found OR very low relevance scores
     if not results:
         return ChatResponse(
             message="I couldn't find products matching your query. Try describing your needs differently, for example: 'I need help with hair fall' or 'looking for scalp treatment'.",
