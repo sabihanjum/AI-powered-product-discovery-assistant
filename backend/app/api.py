@@ -230,19 +230,34 @@ def chat(req: ChatRequest):
     finally:
         db.close()
 
-    # Build prompt for Gemini
-    product_context = "\n".join([f"- {r.title}: {r.reason}" for r in recs])
-    prompt = f"""You are a helpful product recommendation assistant for a health & wellness store.
+    # Build prompt for Gemini - include more product details
+    product_context = ""
+    db2 = SessionLocal()
+    try:
+        for r in recs:
+            prod = crud.get_product(db2, r.product_id)
+            if prod:
+                desc = (prod.description or "")[:300]
+                product_context += f"- {r.title}: {desc}\n"
+            else:
+                product_context += f"- {r.title}: {r.reason}\n"
+    finally:
+        db2.close()
+    
+    prompt = f"""You are a knowledgeable health & wellness product advisor.
 
-Based on the user's query and these matching products, provide a friendly, helpful response.
-Be concise (2-3 sentences) and explain WHY these products might help.
+The customer asked: "{original_query}"
 
-User Query: {query}
-
-Matching Products:
+Here are the most relevant products from our store:
 {product_context}
 
-Respond naturally as a helpful assistant. Don't use markdown or bullet points."""
+Write a helpful, personalized response that:
+1. Acknowledges what the customer is looking for
+2. Explains specifically WHY each recommended product would help with their concern
+3. Mentions key ingredients or benefits if relevant
+4. Keep it conversational and friendly (3-4 sentences max)
+
+Do NOT use bullet points or markdown. Write in natural paragraphs."""
 
     # Generate LLM response with fallback
     try:
@@ -251,10 +266,10 @@ Respond naturally as a helpful assistant. Don't use markdown or bullet points.""
         logger.warning(f"LLM error: {e}")
         llm_out = None
 
-    # Fallback message if LLM fails
+    # Better fallback message if LLM fails
     if not llm_out:
-        product_names = ", ".join([r.title for r in recs[:2]])
-        llm_out = f"Based on your query about '{query}', I recommend checking out {product_names}. These products are highly relevant to your needs."
+        product_names = " and ".join([r.title for r in recs[:2]])
+        llm_out = f"For {original_query}, I'd recommend {product_names}. These products are specifically designed to address your concern with natural, effective ingredients."
 
     return ChatResponse(
         message=llm_out,

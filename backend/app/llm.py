@@ -56,5 +56,5 @@ def generate_response(prompt: str) -> str:
         if out:
             return out
 
-    # fallback: simple templated response
-    return "I found some products that match your query. Here are my recommendations based on your needs."
+    # Return None to indicate LLM failed - caller should handle fallback
+    return None
